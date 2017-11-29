@@ -1,0 +1,634 @@
+### Eclipse Workspace Patch 1.0
+#P C4_DataPack
+Index: data/scripts/handlers/action/onaction/NpcOnAction.java
+===================================================================
+--- data/scripts/handlers/action/onaction/NpcOnAction.java	(revision 879)
++++ data/scripts/handlers/action/onaction/NpcOnAction.java	(working copy)
+@@ -20,6 +20,7 @@
+ 
+ import java.util.List;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.gameserver.handler.action.IActionHandler;
+ import net.sf.l2j.gameserver.model.actor.L2Character;
+ import net.sf.l2j.gameserver.model.actor.L2Npc;
+@@ -142,6 +143,9 @@
+ 							npc.broadcastPacket(new SocialAction(npc.getObjectId(), type));
+ 					}
+ 					
++					if (EngineModsManager.onInteract(player, npc))
++						return false;
++					
+ 					// Open a chat window on client with the text of the L2NpcInstance
+ 					List<Quest> qlsa = npc.getTemplate().getEventQuests(QuestEventType.QUEST_START);
+ 					List<Quest> qlst = npc.getTemplate().getEventQuests(QuestEventType.ON_FIRST_TALK);
+Index: .classpath
+===================================================================
+--- .classpath	(revision 879)
++++ .classpath	(working copy)
+@@ -3,5 +3,6 @@
+ 	<classpathentry kind="src" path="data/scripts"/>
+ 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+ 	<classpathentry combineaccessrules="false" kind="src" path="/C4_GameServer"/>
++	<classpathentry combineaccessrules="false" kind="src" path="/L2jAdmins_EngineMods"/>
+ 	<classpathentry kind="output" path="bin"/>
+ </classpath>
+Index: data/scripts/handlers/action/onaction/PcInstanceOnAction.java
+===================================================================
+--- data/scripts/handlers/action/onaction/PcInstanceOnAction.java	(revision 879)
++++ data/scripts/handlers/action/onaction/PcInstanceOnAction.java	(working copy)
+@@ -18,6 +18,7 @@
+  */
+ package handlers.action.onaction;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.gameserver.geoengine.GeoEngine;
+ import net.sf.l2j.gameserver.handler.action.IActionHandler;
+ import net.sf.l2j.gameserver.model.actor.L2Character;
+@@ -72,6 +73,9 @@
+ 			}
+ 			else
+ 			{
++				if (EngineModsManager.onInteract(player, (L2Character) player.getTarget()))
++					return false;
++				
+ 				// Check if this L2PcInstance is autoAttackable
+ 				if (target.isAutoAttackable(player))
+ 				{
+#P C4_GameServer
+Index: java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java	(revision 874)
++++ java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java	(working copy)
+@@ -24,6 +24,7 @@
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.L2DatabaseFactory;
+ import net.sf.l2j.gameserver.datatables.ItemTable;
+@@ -398,6 +399,9 @@
+ 					}
+ 					listener.notifyUnequiped(slot, old, (L2Playable) getOwner());
+ 				}
++				
++				EngineModsManager.onUnequip(getOwner());
++				
+ 				old.updateDatabase();
+ 			}
+ 			// Add new item in slot of paperdoll
+@@ -416,6 +420,9 @@
+ 					
+ 					listener.notifyEquiped(slot, item, (L2Playable) getOwner());
+ 				}
++				
++				EngineModsManager.onEquip(getOwner());
++				
+ 				item.updateDatabase();
+ 			}
+ 		}
+Index: java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java	(working copy)
+@@ -23,6 +23,7 @@
+ import java.util.regex.Pattern;
+ import java.util.regex.PatternSyntaxException;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.datatables.CharNameTable;
+ import net.sf.l2j.gameserver.datatables.CharTemplateTable;
+@@ -212,6 +213,8 @@
+ 			startTutorialQuest(newChar);
+ 		}
+ 		
++		EngineModsManager.onCreateCharacter(newChar);
++		
+ 		newChar.deleteMe(); // release the world of this character and it's inventory
+ 		
+ 		// send char list
+Index: java/net/sf/l2j/gameserver/model/actor/L2Playable.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/actor/L2Playable.java	(revision 874)
++++ java/net/sf/l2j/gameserver/model/actor/L2Playable.java	(working copy)
+@@ -18,6 +18,7 @@
+  */
+ package net.sf.l2j.gameserver.model.actor;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.gameserver.model.actor.ai.enums.CtrlEventType;
+ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+ import net.sf.l2j.gameserver.model.actor.instance.enums.InstanceType;
+@@ -107,6 +108,9 @@
+ 			setIsDead(true);
+ 		}
+ 		
++		EngineModsManager.onKill(killer, this, killer instanceof L2Summon);
++		EngineModsManager.onDeath(this);
++		
+ 		// Set target to null and cancel Attack or Cast
+ 		setTarget(null);
+ 		
+Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java	(working copy)
+@@ -20,6 +20,7 @@
+ 
+ import java.nio.ByteBuffer;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.gameserver.datatables.SkillTable;
+ import net.sf.l2j.gameserver.instancemanager.sevensigns.SevenSignsFestival;
+ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+@@ -58,6 +59,9 @@
+ 			return;
+ 		}
+ 		
++		if (EngineModsManager.onExitWorld(player))
++			return;
++		
+ 		if (player.getActiveEnchantItem() != null)
+ 		{
+ 			player.sendPacket(ActionFailed.STATIC_PACKET);
+Index: java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java	(revision 874)
++++ java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java	(working copy)
+@@ -18,6 +18,7 @@
+  */
+ package net.sf.l2j.gameserver.model.actor.stat;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.model.actor.L2Character;
+ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+@@ -45,8 +46,8 @@
+ 	 * <B><U> Concept</U> :</B><BR>
+ 	 * A L2Character owns a table of Calculators called <B>_calculators</B>. Each Calculator (a calculator per state) own a table of Func object. A Func object is a mathematic function that permit to calculate the modifier of a state (ex : REG_HP_RATE...) : <BR>
+ 	 * FuncAtkAccuracy -> Math.sqrt(_player.getDEX())*6+_player.getLevel()<BR>
+-	 * When the calc method of a calculator is launched, each mathematics function is called according to its priority <B>_order</B>. Indeed, Func with lowest priority order is executed first and Funcs with the same order are executed in unspecified order. The result of the calculation is stored in
+-	 * the value property of an Env class instance.<BR>
++	 * When the calc method of a calculator is launched, each mathematics function is called according to its priority <B>_order</B>. Indeed, Func with lowest priority order is executed first and Funcs with the same order are executed in unspecified order. The result of the calculation is stored in the
++	 * value property of an Env class instance.<BR>
+ 	 * @param stat The stat to calculate the new value with modifiers
+ 	 * @param init The initial value of the stat before applying modifiers
+ 	 * @param target The L2Charcater whose properties will be used in the calculation (ex : CON, INT...)
+@@ -109,7 +110,7 @@
+ 			}
+ 		}
+ 		
+-		return env.getValue();
++		return EngineModsManager.onStats(stat, _activeChar, env.getValue());
+ 	}
+ 	
+ 	public L2Character getActiveChar()
+Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.java	(working copy)
+@@ -21,6 +21,7 @@
+ import java.nio.ByteBuffer;
+ import java.util.logging.Level;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.datatables.AdminCommandTable;
+ import net.sf.l2j.gameserver.floodprotector.FloodProtector;
+@@ -78,6 +79,9 @@
+ 		{
+ 			if (_command.startsWith("admin_"))
+ 			{
++				if (EngineModsManager.onVoiced(activeChar, _command))
++					return;
++				
+ 				if (activeChar.getAccessLevel() < AdminCommandTable.getInstance().getAccesCommandAdmin(_command.split(" ")[0]))
+ 				{
+ 					activeChar.sendMessage("you do not have permissions to use this command");
+@@ -137,6 +141,9 @@
+ 			}
+ 			else if (_command.startsWith("bbs_") || _command.startsWith("_bbs") || _command.startsWith("_maillist_0_1_0_") || _command.startsWith("_friendlist_0_") || _command.startsWith("bbs_add_fav"))
+ 			{
++				if (EngineModsManager.onCommunityBoard(activeChar, _command))
++					return;
++				
+ 				ICommunityHandler ach = CommunityHandler.getInstance().getHandler(_command);
+ 				if (ach != null)
+ 				{
+@@ -157,6 +164,10 @@
+ 					qs.getQuest().notifyEvent(bypass, activeChar.getLastTalkNpc(), activeChar);
+ 				}
+ 			}
++			else if (_command.startsWith("Engine"))
++			{
++				EngineModsManager.onEvent(activeChar, _command.replace("Engine ", ""));
++			}
+ 			else
+ 			{
+ 				if (!activeChar.validateBypass(_command))
+Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java	(working copy)
+@@ -21,6 +21,7 @@
+ import java.nio.ByteBuffer;
+ import java.util.List;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.illegalaction.IllegalAction;
+ import net.sf.l2j.gameserver.illegalaction.enums.IllegalActionType;
+@@ -501,6 +502,8 @@
+ 			activeChar.sendPacket(new EnchantResult(0));
+ 		}
+ 		
++		EngineModsManager.onEnchant(activeChar);
++		
+ 		activeChar.sendPacket(new ItemList(activeChar, false)); // TODO update only the enchanted item
+ 		activeChar.broadcastUserInfo();
+ 		activeChar.setActiveEnchantItem(null);
+Index: java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java	(working copy)
+@@ -20,6 +20,7 @@
+ 
+ import java.nio.ByteBuffer;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.datatables.AdminCommandTable;
+ import net.sf.l2j.gameserver.handler.command.admin.AdminCommandHandler;
+@@ -60,6 +61,9 @@
+ 			return;
+ 		}
+ 		
++		if (EngineModsManager.onVoiced(activeChar, "admin_" + _command))
++			return;
++		
+ 		if (!activeChar.isGM() && !"gm".equalsIgnoreCase(_command))
+ 		{
+ 			IllegalAction.report(activeChar, "Warning!! Non-gm character " + activeChar.getName() + " requests gm bypass handler, hack?");
+Index: java/net/sf/l2j/gameserver/Shutdown.java
+===================================================================
+--- java/net/sf/l2j/gameserver/Shutdown.java	(revision 874)
++++ java/net/sf/l2j/gameserver/Shutdown.java	(working copy)
+@@ -21,6 +21,7 @@
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.L2DatabaseFactory;
+ import net.sf.l2j.gameserver.datatables.AnnouncementsData;
+@@ -396,6 +397,8 @@
+ 			LOG.log(Level.INFO, "", t);
+ 		}
+ 		
++		EngineModsManager.onShutDown();
++		
+ 		// we cannot abort shutdown anymore, so i removed the "if"
+ 		disconnectAllCharacters();
+ 		
+Index: java/net/sf/l2j/gameserver/network/clientpackets/Say2.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/Say2.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/Say2.java	(working copy)
+@@ -23,6 +23,7 @@
+ import java.util.logging.LogRecord;
+ import java.util.logging.Logger;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.handler.say.ISayHandler;
+ import net.sf.l2j.gameserver.handler.say.SayHandler;
+@@ -252,6 +253,9 @@
+ 			LOG_CHAT.log(record);
+ 		}
+ 		
++		if (EngineModsManager.onVoiced(activeChar, _text))
++			return;
++		
+ 		ISayHandler handler = SayHandler.getInstance().getHandler(_type);
+ 		if (handler != null)
+ 		{
+Index: java/net/sf/l2j/gameserver/model/spawn/Spawn.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/spawn/Spawn.java	(revision 874)
++++ java/net/sf/l2j/gameserver/model/spawn/Spawn.java	(working copy)
+@@ -24,6 +24,7 @@
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.gameserver.ThreadPoolManager;
+ import net.sf.l2j.gameserver.geoengine.GeoEngine;
+ import net.sf.l2j.gameserver.idfactory.IdFactory;
+@@ -502,6 +503,8 @@
+ 		// Link the L2NpcInstance to this L2Spawn
+ 		mob.setSpawn(this);
+ 		
++		EngineModsManager.onSpawn(mob);
++		
+ 		// Init other values of the L2NpcInstance (ex : from its L2CharTemplate for INT, STR, DEX...) and add it in the world as a visible object
+ 		mob.spawnMe(newlocx, newlocy, newlocz);
+ 		
+Index: java/net/sf/l2j/gameserver/network/clientpackets/Logout.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/Logout.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/Logout.java	(working copy)
+@@ -23,6 +23,7 @@
+ import java.sql.PreparedStatement;
+ import java.sql.ResultSet;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.L2DatabaseFactory;
+ import net.sf.l2j.gameserver.datatables.SkillTable;
+@@ -94,6 +95,12 @@
+ 			return;
+ 		}
+ 		
++		if (EngineModsManager.onExitWorld(player))
++		{
++			player.sendPacket(ActionFailed.STATIC_PACKET);
++			return;
++		}
++		
+ 		// Prevent player from logging out if they are a festival participant
+ 		// and it is in progress, otherwise notify party members that the player
+ 		// is not longer a participant.
+Index: .classpath
+===================================================================
+--- .classpath	(revision 874)
++++ .classpath	(working copy)
+@@ -8,5 +8,6 @@
+ 	<classpathentry kind="lib" path="dist/libs/ecj-4.4.jar"/>
+ 	<classpathentry kind="lib" path="dist/libs/mchange-commons-java-0.2.7.jar"/>
+ 	<classpathentry kind="lib" path="dist/libs/mariadb-java-client-1.3.3.jar"/>
++	<classpathentry kind="lib" path="dist/libs/L2J_EngineMods.jar"/>
+ 	<classpathentry kind="output" path="bin"/>
+ </classpath>
+Index: java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java	(working copy)
+@@ -18,6 +18,7 @@
+  */
+ package net.sf.l2j.gameserver.network.serverpackets;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.model.actor.L2Character;
+ import net.sf.l2j.gameserver.model.actor.L2Npc;
+@@ -84,6 +85,10 @@
+ 			_title = cha.getTitle();
+ 		}
+ 		
++		String title = EngineModsManager.onSeeNpcTitle(cha.getObjectId());
++		if (title != null)
++			_title = title;
++		
+ 		if (Config.SHOW_NPC_LVL && (_cha instanceof L2MonsterInstance))
+ 		{
+ 			String t = "Lv " + cha.getLevel() + (cha.getAggroRange() > 0 ? "*" : "");
+Index: java/net/sf/l2j/gameserver/model/zone/Zone.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/zone/Zone.java	(revision 874)
++++ java/net/sf/l2j/gameserver/model/zone/Zone.java	(working copy)
+@@ -24,6 +24,7 @@
+ import java.util.Map;
+ import java.util.concurrent.ConcurrentHashMap;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.gameserver.model.actor.L2Character;
+ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+ import net.sf.l2j.gameserver.model.object.L2Object;
+@@ -34,7 +35,7 @@
+  * @author durgus
+  */
+ public abstract class Zone
+-{ 
++{
+ 	private final int _id;
+ 	protected ZoneForm _zone;
+ 	public Map<Integer, L2Character> _characterList = new ConcurrentHashMap<>();
+@@ -305,6 +306,8 @@
+ 				
+ 				_characterList.put(character.getObjectId(), character);
+ 				onEnter(character);
++				
++				EngineModsManager.onEnterZone(character, this);
+ 			}
+ 		}
+ 		else
+@@ -329,6 +332,8 @@
+ 			// }
+ 			_characterList.remove(character.getObjectId());
+ 			onExit(character);
++			
++			EngineModsManager.onExitZone(character, this);
+ 		}
+ 	}
+ 	
+Index: java/net/sf/l2j/gameserver/GameServer.java
+===================================================================
+--- java/net/sf/l2j/gameserver/GameServer.java	(revision 874)
++++ java/net/sf/l2j/gameserver/GameServer.java	(working copy)
+@@ -25,6 +25,7 @@
+ import java.util.logging.LogManager;
+ import java.util.logging.Logger;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.L2DatabaseFactory;
+ import net.sf.l2j.Server;
+@@ -151,6 +152,10 @@
+ 		L2World.getInstance();
+ 		MapRegionTable.getInstance();
+ 		
++		// custom by fissban
++		Util.printSection("EngineMods");
++		EngineModsManager.init();
++		
+ 		Util.printSection("Geodata & Pathfinding");
+ 		GeoEngine.getInstance();
+ 		
+Index: java/net/sf/l2j/gameserver/model/actor/L2Attackable.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/actor/L2Attackable.java	(revision 874)
++++ java/net/sf/l2j/gameserver/model/actor/L2Attackable.java	(working copy)
+@@ -24,6 +24,7 @@
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.logging.Level;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.datatables.ItemTable;
+ import net.sf.l2j.gameserver.datatables.ManorData;
+@@ -162,10 +163,10 @@
+ 	 * <li>attacker : The attacker L2Character concerned by this RewardInfo of this L2Attackable</li><br>
+ 	 * <li>dmg : Total amount of damage done by the attacker to this L2Attackable (summon + own)</li>
+ 	 */
+-	protected final class RewardInfo
++	public static final class RewardInfo
+ 	{
+-		protected L2Character _attacker;
+-		protected int _dmg = 0;
++		public L2Character _attacker;
++		public int _dmg = 0;
+ 		
+ 		public RewardInfo(L2Character pAttacker, int pDmg)
+ 		{
+@@ -199,6 +200,11 @@
+ 		{
+ 			return _attacker.getObjectId();
+ 		}
++		
++		public int getDamage()
++		{
++			return _dmg;
++		}
+ 	}
+ 	
+ 	/**
+@@ -404,6 +410,8 @@
+ 			
+ 			if (player != null)
+ 			{
++				EngineModsManager.onKill(killer, this, killer instanceof L2Summon);
++				
+ 				if (getTemplate().getEventQuests(QuestEventType.ON_KILL) != null)
+ 				{
+ 					for (final Quest quest : getTemplate().getEventQuests(QuestEventType.ON_KILL))
+@@ -431,6 +439,9 @@
+ 	@Override
+ 	protected void calculateRewards(L2Character lastAttacker)
+ 	{
++		if (EngineModsManager.onNpcExpSp(this, lastAttacker))
++			return;
++		
+ 		// Creates an empty list of rewards
+ 		Map<L2Character, RewardInfo> rewards = new ConcurrentHashMap<>();
+ 		
+@@ -597,7 +608,7 @@
+ 							// - if other pet done dmg, get exp depend on dmg;
+ 							if (lastAttacker instanceof L2PetInstance)
+ 							{
+-							   lastAttacker.addExpAndSp(Math.round(lastAttacker.calcStat(StatsType.EXPSP_RATE, exp, null, null)), (int) lastAttacker.calcStat(StatsType.EXPSP_RATE, sp, null, null));
++								lastAttacker.addExpAndSp(Math.round(lastAttacker.calcStat(StatsType.EXPSP_RATE, exp, null, null)), (int) lastAttacker.calcStat(StatsType.EXPSP_RATE, sp, null, null));
+ 							}
+ 							else
+ 							{
+@@ -661,16 +672,16 @@
+ 							
+ 							// TODO: We need to invent method to:
+ 							// if pet owner_exp_taken == 0
+-							//  add pet to rewardedMembers (or give exp here) if pet done dmg - and give correct exp reward depend on pet dmg;
+-							//  and dont give exp reward from pet   dmg to owner/party members;
+-							//  and      give exp reward from owner dmg to owner/party members; (exclude pet!)
+-							//  for clarity: if both (owner, pet) done dmg, give reward to both. According to rules mentioned above.
++							// add pet to rewardedMembers (or give exp here) if pet done dmg - and give correct exp reward depend on pet dmg;
++							// and dont give exp reward from pet dmg to owner/party members;
++							// and give exp reward from owner dmg to owner/party members; (exclude pet!)
++							// for clarity: if both (owner, pet) done dmg, give reward to both. According to rules mentioned above.
+ 							// else
+-							//  add owner to rewardedMembers (doesn't matter if pet/owner done damage)
+-							//  note: actually we apply penalty in Party#distributeXpAndSp;
+-							//  add exp reward to pet, depend on owner~penalty (exp reward*owner_exp_taken);
+-							//  for clarity: owner get reward with penalty from distributeXpAndSp, pet need to receive part for him;
+-							//  eg. pet with 0.10 penalty and exp to divide for them 1000: pet get 1000*0.10, owner get 1000*0.90;
++							// add owner to rewardedMembers (doesn't matter if pet/owner done damage)
++							// note: actually we apply penalty in Party#distributeXpAndSp;
++							// add exp reward to pet, depend on owner~penalty (exp reward*owner_exp_taken);
++							// for clarity: owner get reward with penalty from distributeXpAndSp, pet need to receive part for him;
++							// eg. pet with 0.10 penalty and exp to divide for them 1000: pet get 1000*0.10, owner get 1000*0.90;
+ 							
+ 							// Until that time, we must remove reward here, for owner with pet.
+ 							// Current way is definitely wrong.
+@@ -1106,6 +1117,9 @@
+ 			return; // Don't drop anything if the last attacker or owner isn't L2PcInstance
+ 		}
+ 		
++		if (EngineModsManager.onNpcDrop(this, mainDamageDealer))
++			return;
++		
+ 		final int levelModifier = calculateLevelModifierForDrop(player); // level modifier in %'s (will be subtracted from drop chance)
+ 		
+ 		// now throw all categorized drops and handle spoil.
+@@ -1686,7 +1700,7 @@
+ 	 * @param damage The damages given by the attacker (L2PcInstance, L2SummonInstance or L2Party)
+ 	 * @return
+ 	 */
+-	private int[] calculateExpAndSp(int diff, int damage)
++	public int[] calculateExpAndSp(int diff, int damage)
+ 	{
+ 		double xp;
+ 		double sp;
+Index: java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java	(revision 876)
++++ java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java	(working copy)
+@@ -37,6 +37,7 @@
+ import java.util.concurrent.locks.ReentrantLock;
+ import java.util.logging.Level;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.L2DatabaseFactory;
+ import net.sf.l2j.gameserver.MmoConnection;
+@@ -4066,6 +4067,9 @@
+ 	 */
+ 	private void restoreSkills()
+ 	{
++		if (EngineModsManager.onRestoreSkills(this))
++			return;
++		
+ 		try (Connection con = L2DatabaseFactory.getInstance().getConnection();
+ 			PreparedStatement statement = con.prepareStatement(RESTORE_SKILLS_FOR_CHAR))
+ 		{
+Index: java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java	(working copy)
+@@ -20,6 +20,7 @@
+ 
+ import java.nio.ByteBuffer;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.datatables.AnnouncementsData;
+ import net.sf.l2j.gameserver.datatables.ClanHallData;
+@@ -336,6 +337,8 @@
+ 		{
+ 			activeChar.setHero(true);
+ 		}
++		
++		EngineModsManager.onEnterWorld(activeChar);
+ 	}
+ 	
+ 	/**
+Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestShowBoard.java
+===================================================================
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestShowBoard.java	(revision 874)
++++ java/net/sf/l2j/gameserver/network/clientpackets/RequestShowBoard.java	(working copy)
+@@ -20,6 +20,7 @@
+ 
+ import java.nio.ByteBuffer;
+ 
++import main.EngineModsManager;
+ import net.sf.l2j.Config;
+ import net.sf.l2j.gameserver.handler.community.CommunityHandler;
+ import net.sf.l2j.gameserver.handler.community.ICommunityHandler;
+@@ -49,6 +50,9 @@
+ 	@Override
+ 	public void runImpl()
+ 	{
++		if (EngineModsManager.onCommunityBoard(getClient().getActiveChar(), Config.BBS_DEFAULT))
++			return;
++		
+ 		ICommunityHandler ach = CommunityHandler.getInstance().getHandler(Config.BBS_DEFAULT);
+ 		if (ach != null)
+ 		{
