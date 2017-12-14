@@ -419,7 +419,7 @@ public class ClanCommunityBoard extends AbstractMods
 			hb.append("<td fixwidth=50 align=center>", PlayerData.get(member.getObjectId()).getRebirth(), "</td>");
 			hb.append("<td fixwidth=25 align=center>", getIconStatus(PlayerData.get(member.getObjectId()).isAio()), "</td>");
 			hb.append("<td fixwidth=25 align=center>", getIconStatus(PlayerData.get(member.getObjectId()).isVip()), "</td>");
-			hb.append("<td fixwidth=100 align=center>", ClassId.values()[member.getClassId()], "</td>");
+			hb.append("<td fixwidth=100 align=center>", ClassId.getById(member.getClassId()), "</td>");
 			hb.append("<td fixwidth=66 align=center><button action=\"bypass _bbsclan eject ", member.getName(), "\" width=16 height=16 back=", L2UI.bbs_delete_down, " fore=", L2UI.bbs_delete, "></td>");
 			hb.append("</tr>");
 			hb.append("</table>");

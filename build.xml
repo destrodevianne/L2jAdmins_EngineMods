@@ -21,7 +21,7 @@
 			</manifest>
 		</jar>
 	
-		<copy todir="build/dist/gameserver/libs">
+		<copy todir="build/dist/libs">
 			<fileset dir="build">
 				<include name="L2J_EngineMods.jar" />
 			</fileset>
@@ -36,7 +36,7 @@
 		<mkdir dir="build" />
 		<mkdir dir="build/classes" />
 		<mkdir dir="build/dist" />
-		<mkdir dir="build/dist/gameserver" />
+		<mkdir dir="build/dist/game" />
 	</target>	
 	
 	<target name="clean" description="Remove the output directories.">
@@ -49,7 +49,7 @@
 		<fail unless="JDK8.present" message="Java 1.8 is required, but your version is Java ${ant.java.version}. Install latest JDK." />
 	</target>
 	
-	<path id="aCis_gameserver.classpath">
+	<path id="C4_GameServer.classpath">
 		<pathelement location="${workspace}/C4_GameServer/bin"/>
 		<pathelement location="${workspace}/C4_GameServer/lib/c3p0-0.9.5-pre8.jar"/>
 		<pathelement location="${workspace}/C4_GameServer/lib/java-engine-1.8.jar"/>
@@ -62,7 +62,7 @@
 
 	<path id="classpath">
 		<pathelement location="bin"/>
-		<path refid="aCis_gameserver.classpath"/>
+		<path refid="C4_GameServer.classpath"/>
 	</path>
 
 	<pathconvert property="manifest.libs" pathsep=" ">
