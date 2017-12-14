@@ -20,7 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import main.data.ConfigData;
-import main.data.FakePlayerData;
 import main.data.IconData;
 import main.data.ModsData;
 import main.data.PlayerData;
@@ -93,7 +92,6 @@ public class EngineModsManager
 		try{    IconData.load();        }catch(Exception e){e.printStackTrace();}
 		try{    SkillData.load();       }catch(Exception e){e.printStackTrace();}
 		try{    ConfigData.load();      }catch(Exception e){e.printStackTrace();}
-		try{    FakePlayerData.load();  }catch(Exception e){e.printStackTrace();}
 		try{    SchemeBuffData.load();  }catch(Exception e){e.printStackTrace();}
 		LOG.config(Util.SEPARATOR);
 		loadModsAndEvents();

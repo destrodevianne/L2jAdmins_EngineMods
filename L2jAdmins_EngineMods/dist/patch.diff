@@ -2,7 +2,7 @@
 #P C4_DataPack
 Index: data/scripts/handlers/action/onaction/NpcOnAction.java
 ===================================================================
---- data/scripts/handlers/action/onaction/NpcOnAction.java	(revision 888)
+--- data/scripts/handlers/action/onaction/NpcOnAction.java	(revision 895)
 +++ data/scripts/handlers/action/onaction/NpcOnAction.java	(working copy)
 @@ -20,6 +20,7 @@
  
@@ -24,7 +24,7 @@ Index: data/scripts/handlers/action/onaction/NpcOnAction.java
  					List<Quest> qlst = npc.getTemplate().getEventQuests(QuestEventType.ON_FIRST_TALK);
 Index: .classpath
 ===================================================================
---- .classpath	(revision 888)
+--- .classpath	(revision 895)
 +++ .classpath	(working copy)
 @@ -3,5 +3,6 @@
  	<classpathentry kind="src" path="data/scripts"/>
@@ -35,7 +35,7 @@ Index: .classpath
  </classpath>
 Index: data/scripts/handlers/action/onaction/PcInstanceOnAction.java
 ===================================================================
---- data/scripts/handlers/action/onaction/PcInstanceOnAction.java	(revision 888)
+--- data/scripts/handlers/action/onaction/PcInstanceOnAction.java	(revision 895)
 +++ data/scripts/handlers/action/onaction/PcInstanceOnAction.java	(working copy)
 @@ -18,6 +18,7 @@
   */
@@ -58,7 +58,7 @@ Index: data/scripts/handlers/action/onaction/PcInstanceOnAction.java
 #P C4_GameServer
 Index: java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java
 ===================================================================
---- java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java	(revision 888)
+--- java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java	(working copy)
 @@ -24,6 +24,7 @@
  import java.util.ArrayList;
@@ -90,7 +90,7 @@ Index: java/net/sf/l2j/gameserver/model/itemcontainer/Inventory.java
  		}
 Index: java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java	(working copy)
 @@ -23,6 +23,7 @@
  import java.util.regex.Pattern;
@@ -111,7 +111,7 @@ Index: java/net/sf/l2j/gameserver/network/clientpackets/CharacterCreate.java
  		// send char list
 Index: java/net/sf/l2j/gameserver/model/actor/L2Playable.java
 ===================================================================
---- java/net/sf/l2j/gameserver/model/actor/L2Playable.java	(revision 888)
+--- java/net/sf/l2j/gameserver/model/actor/L2Playable.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/model/actor/L2Playable.java	(working copy)
 @@ -18,6 +18,7 @@
   */
@@ -133,7 +133,7 @@ Index: java/net/sf/l2j/gameserver/model/actor/L2Playable.java
  		
 Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java	(working copy)
 @@ -20,6 +20,7 @@
  
@@ -155,7 +155,7 @@ Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestRestart.java
  			player.sendPacket(ActionFailed.STATIC_PACKET);
 Index: java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java
 ===================================================================
---- java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java	(revision 888)
+--- java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java	(working copy)
 @@ -18,6 +18,7 @@
   */
@@ -165,17 +165,7 @@ Index: java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java
  import net.sf.l2j.Config;
  import net.sf.l2j.gameserver.model.actor.L2Character;
  import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-@@ -45,8 +46,8 @@
- 	 * <B><U> Concept</U> :</B><BR>
- 	 * A L2Character owns a table of Calculators called <B>_calculators</B>. Each Calculator (a calculator per state) own a table of Func object. A Func object is a mathematic function that permit to calculate the modifier of a state (ex : REG_HP_RATE...) : <BR>
- 	 * FuncAtkAccuracy -> Math.sqrt(_player.getDEX())*6+_player.getLevel()<BR>
--	 * When the calc method of a calculator is launched, each mathematics function is called according to its priority <B>_order</B>. Indeed, Func with lowest priority order is executed first and Funcs with the same order are executed in unspecified order. The result of the calculation is stored in
--	 * the value property of an Env class instance.<BR>
-+	 * When the calc method of a calculator is launched, each mathematics function is called according to its priority <B>_order</B>. Indeed, Func with lowest priority order is executed first and Funcs with the same order are executed in unspecified order. The result of the calculation is stored in the
-+	 * value property of an Env class instance.<BR>
- 	 * @param stat The stat to calculate the new value with modifiers
- 	 * @param init The initial value of the stat before applying modifiers
- 	 * @param target The L2Charcater whose properties will be used in the calculation (ex : CON, INT...)
+
 @@ -109,7 +110,7 @@
  			}
  		}
@@ -187,7 +177,7 @@ Index: java/net/sf/l2j/gameserver/model/actor/stat/CharStat.java
  	public L2Character getActiveChar()
 Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.java	(working copy)
 @@ -21,6 +21,7 @@
  import java.nio.ByteBuffer;
@@ -230,7 +220,7 @@ Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestBypassToServer.ja
  				if (!activeChar.validateBypass(_command))
 Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java	(working copy)
 @@ -21,6 +21,7 @@
  import java.nio.ByteBuffer;
@@ -251,7 +241,7 @@ Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestEnchantItem.java
  		activeChar.setActiveEnchantItem(null);
 Index: java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java	(working copy)
 @@ -20,6 +20,7 @@
  
@@ -273,7 +263,7 @@ Index: java/net/sf/l2j/gameserver/network/clientpackets/SendBypassBuildCmd.java
  			IllegalAction.report(activeChar, "Warning!! Non-gm character " + activeChar.getName() + " requests gm bypass handler, hack?");
 Index: java/net/sf/l2j/gameserver/Shutdown.java
 ===================================================================
---- java/net/sf/l2j/gameserver/Shutdown.java	(revision 888)
+--- java/net/sf/l2j/gameserver/Shutdown.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/Shutdown.java	(working copy)
 @@ -21,6 +21,7 @@
  import java.util.logging.Level;
@@ -294,7 +284,7 @@ Index: java/net/sf/l2j/gameserver/Shutdown.java
  		
 Index: java/net/sf/l2j/gameserver/network/clientpackets/Say2.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/Say2.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/Say2.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/Say2.java	(working copy)
 @@ -23,6 +23,7 @@
  import java.util.logging.LogRecord;
@@ -337,7 +327,7 @@ Index: java/net/sf/l2j/gameserver/model/spawn/Spawn.java
  		
 Index: java/net/sf/l2j/gameserver/network/clientpackets/Logout.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/Logout.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/Logout.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/Logout.java	(working copy)
 @@ -23,6 +23,7 @@
  import java.sql.PreparedStatement;
@@ -362,7 +352,7 @@ Index: java/net/sf/l2j/gameserver/network/clientpackets/Logout.java
  		// is not longer a participant.
 Index: .classpath
 ===================================================================
---- .classpath	(revision 888)
+--- .classpath	(revision 895)
 +++ .classpath	(working copy)
 @@ -8,5 +8,6 @@
  	<classpathentry kind="lib" path="dist/libs/ecj-4.4.jar"/>
@@ -373,7 +363,7 @@ Index: .classpath
  </classpath>
 Index: java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java	(working copy)
 @@ -18,6 +18,7 @@
   */
@@ -394,9 +384,22 @@ Index: java/net/sf/l2j/gameserver/network/serverpackets/NpcInfo.java
  		if (Config.SHOW_NPC_LVL && (_cha instanceof L2MonsterInstance))
  		{
  			String t = "Lv " + cha.getLevel() + (cha.getAggroRange() > 0 ? "*" : "");
+Index: java/net/sf/l2j/gameserver/model/actor/instance/L2VillageMasterInstance.java
+===================================================================
+--- java/net/sf/l2j/gameserver/model/actor/instance/L2VillageMasterInstance.java	(revision 895)
++++ java/net/sf/l2j/gameserver/model/actor/instance/L2VillageMasterInstance.java	(working copy)
+@@ -705,7 +705,7 @@
+ 					int subClassId = prevSubClass.getClassId();
+ 					if (subClassId >= 88)
+ 					{
+-						subClassId = ClassId.getById(charClassId).getParent().getId();
++						subClassId = ClassId.getById(subClassId).getParent().getId();
+ 					}
+ 					
+ 					if ((availSub.ordinal() == subClassId) || (availSub.ordinal() == player.getBaseClass()))
 Index: java/net/sf/l2j/gameserver/model/zone/Zone.java
 ===================================================================
---- java/net/sf/l2j/gameserver/model/zone/Zone.java	(revision 888)
+--- java/net/sf/l2j/gameserver/model/zone/Zone.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/model/zone/Zone.java	(working copy)
 @@ -24,6 +24,7 @@
  import java.util.Map;
@@ -406,15 +409,6 @@ Index: java/net/sf/l2j/gameserver/model/zone/Zone.java
  import net.sf.l2j.gameserver.model.actor.L2Character;
  import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
  import net.sf.l2j.gameserver.model.object.L2Object;
-@@ -34,7 +35,7 @@
-  * @author durgus
-  */
- public abstract class Zone
--{ 
-+{
- 	private final int _id;
- 	protected ZoneForm _zone;
- 	public Map<Integer, L2Character> _characterList = new ConcurrentHashMap<>();
 @@ -305,6 +306,8 @@
  				
  				_characterList.put(character.getObjectId(), character);
@@ -435,7 +429,7 @@ Index: java/net/sf/l2j/gameserver/model/zone/Zone.java
  	
 Index: java/net/sf/l2j/gameserver/GameServer.java
 ===================================================================
---- java/net/sf/l2j/gameserver/GameServer.java	(revision 888)
+--- java/net/sf/l2j/gameserver/GameServer.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/GameServer.java	(working copy)
 @@ -25,6 +25,7 @@
  import java.util.logging.LogManager;
@@ -458,7 +452,7 @@ Index: java/net/sf/l2j/gameserver/GameServer.java
  		
 Index: java/net/sf/l2j/gameserver/model/actor/L2Attackable.java
 ===================================================================
---- java/net/sf/l2j/gameserver/model/actor/L2Attackable.java	(revision 888)
+--- java/net/sf/l2j/gameserver/model/actor/L2Attackable.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/model/actor/L2Attackable.java	(working copy)
 @@ -24,6 +24,7 @@
  import java.util.concurrent.ConcurrentHashMap;
@@ -513,41 +507,6 @@ Index: java/net/sf/l2j/gameserver/model/actor/L2Attackable.java
  		// Creates an empty list of rewards
  		Map<L2Character, RewardInfo> rewards = new ConcurrentHashMap<>();
  		
-@@ -597,7 +608,7 @@
- 							// - if other pet done dmg, get exp depend on dmg;
- 							if (lastAttacker instanceof L2PetInstance)
- 							{
--							   lastAttacker.addExpAndSp(Math.round(lastAttacker.calcStat(StatsType.EXPSP_RATE, exp, null, null)), (int) lastAttacker.calcStat(StatsType.EXPSP_RATE, sp, null, null));
-+								lastAttacker.addExpAndSp(Math.round(lastAttacker.calcStat(StatsType.EXPSP_RATE, exp, null, null)), (int) lastAttacker.calcStat(StatsType.EXPSP_RATE, sp, null, null));
- 							}
- 							else
- 							{
-@@ -661,16 +672,16 @@
- 							
- 							// TODO: We need to invent method to:
- 							// if pet owner_exp_taken == 0
--							//  add pet to rewardedMembers (or give exp here) if pet done dmg - and give correct exp reward depend on pet dmg;
--							//  and dont give exp reward from pet   dmg to owner/party members;
--							//  and      give exp reward from owner dmg to owner/party members; (exclude pet!)
--							//  for clarity: if both (owner, pet) done dmg, give reward to both. According to rules mentioned above.
-+							// add pet to rewardedMembers (or give exp here) if pet done dmg - and give correct exp reward depend on pet dmg;
-+							// and dont give exp reward from pet dmg to owner/party members;
-+							// and give exp reward from owner dmg to owner/party members; (exclude pet!)
-+							// for clarity: if both (owner, pet) done dmg, give reward to both. According to rules mentioned above.
- 							// else
--							//  add owner to rewardedMembers (doesn't matter if pet/owner done damage)
--							//  note: actually we apply penalty in Party#distributeXpAndSp;
--							//  add exp reward to pet, depend on owner~penalty (exp reward*owner_exp_taken);
--							//  for clarity: owner get reward with penalty from distributeXpAndSp, pet need to receive part for him;
--							//  eg. pet with 0.10 penalty and exp to divide for them 1000: pet get 1000*0.10, owner get 1000*0.90;
-+							// add owner to rewardedMembers (doesn't matter if pet/owner done damage)
-+							// note: actually we apply penalty in Party#distributeXpAndSp;
-+							// add exp reward to pet, depend on owner~penalty (exp reward*owner_exp_taken);
-+							// for clarity: owner get reward with penalty from distributeXpAndSp, pet need to receive part for him;
-+							// eg. pet with 0.10 penalty and exp to divide for them 1000: pet get 1000*0.10, owner get 1000*0.90;
- 							
- 							// Until that time, we must remove reward here, for owner with pet.
- 							// Current way is definitely wrong.
 @@ -1106,6 +1117,9 @@
  			return; // Don't drop anything if the last attacker or owner isn't L2PcInstance
  		}
@@ -558,18 +517,9 @@ Index: java/net/sf/l2j/gameserver/model/actor/L2Attackable.java
  		final int levelModifier = calculateLevelModifierForDrop(player); // level modifier in %'s (will be subtracted from drop chance)
  		
  		// now throw all categorized drops and handle spoil.
-@@ -1686,7 +1700,7 @@
- 	 * @param damage The damages given by the attacker (L2PcInstance, L2SummonInstance or L2Party)
- 	 * @return
- 	 */
--	private int[] calculateExpAndSp(int diff, int damage)
-+	public int[] calculateExpAndSp(int diff, int damage)
- 	{
- 		double xp;
- 		double sp;
 Index: java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java
 ===================================================================
---- java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java	(revision 888)
+--- java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java	(working copy)
 @@ -39,6 +39,8 @@
  import java.util.logging.Level;
@@ -600,7 +550,7 @@ Index: java/net/sf/l2j/gameserver/model/actor/instance/L2PcInstance.java
  		{
 Index: java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java	(working copy)
 @@ -20,6 +20,7 @@
  
@@ -621,7 +571,7 @@ Index: java/net/sf/l2j/gameserver/network/clientpackets/EnterWorld.java
  	/**
 Index: java/net/sf/l2j/gameserver/network/clientpackets/RequestShowBoard.java
 ===================================================================
---- java/net/sf/l2j/gameserver/network/clientpackets/RequestShowBoard.java	(revision 888)
+--- java/net/sf/l2j/gameserver/network/clientpackets/RequestShowBoard.java	(revision 895)
 +++ java/net/sf/l2j/gameserver/network/clientpackets/RequestShowBoard.java	(working copy)
 @@ -20,6 +20,7 @@
  
