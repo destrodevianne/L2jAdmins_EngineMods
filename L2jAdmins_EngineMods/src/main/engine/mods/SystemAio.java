@@ -341,7 +341,7 @@ public class SystemAio extends AbstractMods
 		// Set Max Lvl
 		if (ConfigData.AIO_SET_MAX_LVL)
 		{
-			player.getStat().addExp(player.getStat().getExpForLevel(81));
+			player.getStat().addExp(player.getStat().getExpForLevel(78));
 		}
 		// clear karma
 		if (player.getKarma() > 0)
