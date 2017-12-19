@@ -127,7 +127,7 @@ public class AntiBot extends AbstractMods
 	}
 	
 	@Override
-	public void onEvent(L2PcInstance player, L2Character npc, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
 		// if the answer is correct
 		if (PlayerData.get(player).isAnswerRight(command))
@@ -222,7 +222,7 @@ public class AntiBot extends AbstractMods
 			}
 			
 			hb.append("<td align=\"center\" fixwidth=\"32\">");
-			hb.append("<button value=\"\" action=\"bypass -h Engine AntiBot ", i, "\" width=\"32\" height=\"32\" back=\"", icon, "\" fore=\"", icon, "\">");
+			hb.append("<button value=\"\" action=\"bypass -h Engine AntiBot 0 ", i, "\" width=\"32\" height=\"32\" back=\"", icon, "\" fore=\"", icon, "\">");
 			hb.append("</td>");
 		}
 		hb.append("</tr>");

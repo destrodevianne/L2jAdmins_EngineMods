@@ -31,6 +31,7 @@ import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2TeleporterInstance;
 import net.sf.l2j.gameserver.model.items.instance.ItemInstance;
@@ -116,7 +117,7 @@ public class SystemAio extends AbstractMods
 	}
 	
 	@Override
-	public void onEvent(L2PcInstance player, L2Character npc, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
 		StringTokenizer st = new StringTokenizer(command, " ");
 		
@@ -309,7 +310,7 @@ public class SystemAio extends AbstractMods
 		{
 			if (i % MAX_PER_PAGE == 0)
 			{
-				hb.append("<td width=18 align=center><a action=\"bypass -h Engine SystemAio aioInfo ", currentPage, "\">" + currentPage, "</a></td>");
+				hb.append("<td width=18 align=center><a action=\"bypass -h Engine 0 SystemAio aioInfo ", currentPage, "\">" + currentPage, "</a></td>");
 				currentPage++;
 			}
 		}
@@ -441,7 +442,7 @@ public class SystemAio extends AbstractMods
 		{
 			if (i % MAX_PER_PAGE == 0)
 			{
-				hb.append("<td width=18 align=center><a action=\"bypass -h Engine SystemAio allAio ", currentPage, "\">", currentPage, "</a></td>");
+				hb.append("<td width=18 align=center><a action=\"bypass -h Engine 0 SystemAio allAio ", currentPage, "\">", currentPage, "</a></td>");
 				currentPage++;
 			}
 		}

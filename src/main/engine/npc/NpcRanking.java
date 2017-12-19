@@ -154,12 +154,12 @@ public class NpcRanking extends AbstractMods
 		hb.append("<table width=280>");
 		hb.append("<tr>");
 		hb.append("<td>", Html.newImage("L2UI.bbs_folder", 32, 32), "</td>");
-		hb.append("<td><button value=\"Top PvP\" action=\"bypass -h Engine NpcRanking pvp\" width=216 height=32 back=L2UI_CH3.refinegrade3_21 fore=L2UI_CH3.refinegrade3_21></td>");
+		hb.append("<td><button value=\"Top PvP\" action=\"bypass -h Engine " + NPC + " NpcRanking pvp\" width=216 height=32 back=L2UI_CH3.refinegrade3_21 fore=L2UI_CH3.refinegrade3_21></td>");
 		hb.append("<td>", Html.newImage("L2UI.bbs_folder", 32, 32), "</td>");
 		hb.append("</tr>");
 		hb.append("<tr>");
 		hb.append("<td>", Html.newImage("L2UI.bbs_folder", 32, 32), "</td>");
-		hb.append("<td><button value=\"Top PK\" action=\"bypass -h Engine NpcRanking pk\" width=216 height=32 back=L2UI_CH3.refinegrade3_21 fore=L2UI_CH3.refinegrade3_21></td>");
+		hb.append("<td><button value=\"Top PK\" action=\"bypass -h Engine " + NPC + " NpcRanking pk\" width=216 height=32 back=L2UI_CH3.refinegrade3_21 fore=L2UI_CH3.refinegrade3_21></td>");
 		hb.append("<td>", Html.newImage("L2UI.bbs_folder", 32, 32), "</td>");
 		hb.append("</tr>");
 		hb.append("</table>");
@@ -171,9 +171,9 @@ public class NpcRanking extends AbstractMods
 	}
 	
 	@Override
-	public void onEvent(L2PcInstance player, L2Character npc, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
-		if (((L2Npc) npc).getId() != NPC)
+		if (npc.getId() != NPC)
 		{
 			return;
 		}

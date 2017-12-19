@@ -91,9 +91,9 @@ public class NpcBufferScheme extends AbstractMods
 	}
 	
 	@Override
-	public void onEvent(L2PcInstance player, L2Character npc, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
-		if (((L2Npc) npc).getId() != NPC_ID)
+		if (npc.getId() != NPC_ID)
 		{
 			return;
 		}
@@ -158,9 +158,9 @@ public class NpcBufferScheme extends AbstractMods
 			case "create":
 			{
 				// anti sql inject
-				String param = eventParam1.replaceAll("[ !" + "\"" + "#$%&'()*+,/:;<=>?@" + "\\[" + "\\\\" + "\\]" + "\\^" + "`{|}~]", ""); // JOJO
+				String name = eventParam1.replaceAll("[ !" + "\"" + "#$%&'()*+,/:;<=>?@" + "\\[" + "\\\\" + "\\]" + "\\^" + "`{|}~]", ""); // JOJO
 				
-				if (param.length() == 0 || param.equals("no_name"))
+				if (name.length() == 0 || name.equals("no_name"))
 				{
 					player.sendPacket(SystemMessage.INCORRECT_NAME_TRY_AGAIN);
 					showText(player, "Info", "Please, enter the scheme name!", true, "Return", "main");
@@ -169,16 +169,31 @@ public class NpcBufferScheme extends AbstractMods
 				
 				// XXX INSERT INTO npcbuffer_scheme_list (player_id,scheme_name) VALUES (?,?)
 				// obtenemos el listado de schemes
-				String schemeNames = getValueDB(player.getObjectId(), "schemeName");
-				// aqgregamos el nuevo nombre del scheme
-				if (schemeNames == null)
+				String allSchemes = getValueDB(player.getObjectId(), "schemeName");
+				
+				// if first scheme create...init var
+				if (allSchemes == null)
 				{
-					schemeNames = "";
+					allSchemes = "";
 				}
-				schemeNames += param + ",";
+				else
+				{
+					// check if scheme name exist
+					for (String s : allSchemes.split(","))
+					{
+						if (s != null && s.equals(name))
+						{
+							player.sendPacket(SystemMessage.INCORRECT_NAME_TRY_AGAIN);
+							showText(player, "Info", "The name you are trying to use is already in use!", true, "Return", "main");
+							return;
+						}
+					}
+				}
+				
+				allSchemes += name + ",";
 				
 				// salvamos el nuevo listado
-				setValueDB(player.getObjectId(), "schemeName", schemeNames);
+				setValueDB(player.getObjectId(), "schemeName", allSchemes);
 				
 				rebuildMainHtml(player);
 				return;
@@ -211,7 +226,7 @@ public class NpcBufferScheme extends AbstractMods
 			{
 				// TODO podriamos crear un metodo q devuelva el html para evitar
 				// tenerlo todo en una misma linea no?
-				sendHtml(player, null, "<html><title>" + TITLE_NAME + "</title><body><center>" + Html.headHtml("BUFFER") + "<br>Do you really want to delete '" + eventParam1 + "' scheme?<br><br>" + "<button value=\"Yes\" action=\"bypass -h Engine NpcBufferScheme delete " + eventParam1 + "\" width=75 height=21 back=" + L2UI_CH3.Btn1_normalOn + " fore=" + L2UI_CH3.Btn1_normal + ">" + "<button value=\"No\" action=\"bypass -h Engine NpcBufferScheme delete_1\" width=75 height=21 back=" + L2UI_CH3.Btn1_normalOn + " fore=" + L2UI_CH3.Btn1_normal + ">" + "<br><font color=303030>" + TITLE_NAME + "</font></center></body></html>");
+				sendHtml(player, null, "<html><title>" + TITLE_NAME + "</title><body><center>" + Html.headHtml("BUFFER") + "<br>Do you really want to delete '" + eventParam1 + "' scheme?<br><br>" + "<button value=\"Yes\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme delete " + eventParam1 + "\" width=75 height=21 back=" + L2UI_CH3.Btn1_normalOn + " fore=" + L2UI_CH3.Btn1_normal + ">" + "<button value=\"No\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme delete_1\" width=75 height=21 back=" + L2UI_CH3.Btn1_normalOn + " fore=" + L2UI_CH3.Btn1_normal + ">" + "<br><font color=303030>" + TITLE_NAME + "</font></center></body></html>");
 				return;
 			}
 			case "create_1":
@@ -317,12 +332,12 @@ public class NpcBufferScheme extends AbstractMods
 						showText(player, "Sorry", "You don't have the enough items:<br>You need: <font color=LEVEL>" + BUFF_PRICE + " " + getItemNameHtml(CONSUMABLE_ID) + "!", false, "0", "0");
 						return;
 					}
-					final boolean getPetbuff = isPetBuff(player);
-					if (getPetbuff)
+					
+					if (isPetBuff(player))
 					{
 						if (player.getPet() != null)
 						{
-							heal(player, getPetbuff);
+							heal(player, true);
 						}
 						else
 						{
@@ -332,7 +347,7 @@ public class NpcBufferScheme extends AbstractMods
 					}
 					else
 					{
-						heal(player, getPetbuff);
+						heal(player, false);
 					}
 					UtilInventory.takeItems(player, CONSUMABLE_ID, BUFF_PRICE);
 					if (TIME_OUT)
@@ -608,7 +623,7 @@ public class NpcBufferScheme extends AbstractMods
 	private static String getSkillIconHtml(int id, int level)
 	{
 		String iconNumber = SkillData.getSkillIcon(id);
-		return "<button action=\"bypass -h Engine NpcBufferScheme description " + id + " " + level + " x\" width=32 height=32 back=\"Icon.skill" + iconNumber + "\" fore=\"Icon.skill" + iconNumber + "\">";
+		return "<button action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme description " + id + " " + level + " x\" width=32 height=32 back=\"Icon.skill" + iconNumber + "\" fore=\"Icon.skill" + iconNumber + "\">";
 	}
 	
 	private boolean checkTimeOut(L2PcInstance player)
@@ -651,15 +666,12 @@ public class NpcBufferScheme extends AbstractMods
 			SummonStat petStat = target.getStat();
 			petStatus.setCurrentHp(petStat.getMaxHp());
 			petStatus.setCurrentMp(petStat.getMaxMp());
+			
 			if (target instanceof L2PetInstance)
 			{
 				L2PetInstance pet = (L2PetInstance) target;
-				pet.setCurrentFed(pet.getPetData().getPetMaxFeed());
-				player.sendPacket(new SetSummonRemainTime(pet.getPetData().getPetMaxFeed(), pet.getCurrentFed()));
-			}
-			else
-			{
-				throw new RuntimeException();
+				pet.setCurrentFed(pet.getMaxFed());
+				player.sendPacket(new SetSummonRemainTime(pet.getMaxFed(), pet.getCurrentFed()));
 			}
 		}
 	}
@@ -690,35 +702,35 @@ public class NpcBufferScheme extends AbstractMods
 			bottonA = "Auto Buff Pet";
 			bottonB = "Heal My Pet";
 			bottonC = "Remove Buffs";
-			hb.append("<button value=\"Pet Options\" action=\"bypass -h Engine NpcBufferScheme buffpet 0\" width=75 height=21  back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+			hb.append("<button value=\"Pet Options\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme buffpet 0\" width=75 height=21  back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		}
 		else
 		{
 			bottonA = "Auto Buff";
 			bottonB = "Heal";
 			bottonC = "Remove Buffs";
-			hb.append("<button value=\"Char Options\" action=\"bypass -h Engine NpcBufferScheme buffpet 1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+			hb.append("<button value=\"Char Options\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme buffpet 1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		}
 		
 		hb.append("<table width=80% cellspacing=0 cellpadding=1>");
 		hb.append("<tr>");
-		hb.append("<td height=32 align=center><button value=Buffs action=\"bypass -h Engine NpcBufferScheme redirect_view_buff\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
-		hb.append("<td height=32 align=center><button value=Resist action=\"bypass -h Engine NpcBufferScheme redirect_view_resist\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Buffs action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_buff\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Resist action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_resist\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 		hb.append("</tr>");
 		
 		hb.append("<tr>");
-		hb.append("<td height=32 align=center><button value=Songs action=\"bypass -h Engine NpcBufferScheme redirect_view_song\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
-		hb.append("<td height=32 align=center><button value=Dances action=\"bypass -h Engine NpcBufferScheme redirect_view_dances\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Songs action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_song\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Dances action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_dances\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 		hb.append("</tr>");
 		
 		hb.append("<tr>");
-		hb.append("<td height=32 align=center><button value=Chants action=\"bypass -h Engine NpcBufferScheme redirect_view_chants\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
-		hb.append("<td height=32 align=center><button value=Special action=\"bypass -h Engine NpcBufferScheme redirect_view_special\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Chants action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_chants\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Special action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_special\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 		hb.append("</tr>");
 		
 		hb.append("<tr>");
-		hb.append("<td height=32 align=center><button value=Others action=\"bypass -h Engine NpcBufferScheme redirect_view_other\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
-		hb.append("<td height=32 align=center><button value=Cubics action=\"bypass -h Engine NpcBufferScheme redirect_view_cubic\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Others action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_other\" width=75 height=21back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td height=32 align=center><button value=Cubics action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_cubic\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 		hb.append("</tr>");
 		hb.append("</table>");
 		// ---------------------------------------------------------------------------------------------
@@ -731,9 +743,9 @@ public class NpcBufferScheme extends AbstractMods
 		hb.append(Html.newImage(L2UI.SquareWhite, 264, 1));
 		hb.append("<table width=100% height=37 border=0 cellspacing=0 cellpadding=5>");
 		hb.append("<tr>");
-		hb.append("<td><button value=\"", bottonA, "\" action=\"bypass -h Engine NpcBufferScheme castBuffSet 0 0 0\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
-		hb.append("<td><button value=\"", bottonB, "\" action=\"bypass -h Engine NpcBufferScheme heal\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
-		hb.append("<td><button value=\"", bottonC, "\" action=\"bypass -h Engine NpcBufferScheme removeBuffs 0 0 0\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td><button value=\"", bottonA, "\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme castBuffSet 0 0 0\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td><button value=\"", bottonB, "\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme heal\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+		hb.append("<td><button value=\"", bottonC, "\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme removeBuffs 0 0 0\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 		hb.append("</tr>");
 		hb.append("</table>");
 		
@@ -786,7 +798,7 @@ public class NpcBufferScheme extends AbstractMods
 				{
 					td = 0;
 				}
-				hb.append(TRS[td] + "<button value=\"", schemeNames.split(",")[i], "\" action=\"bypass -h Engine NpcBufferScheme cast ", schemeNames.split(",")[i], "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">", TRS[td + 1]);
+				hb.append(TRS[td] + "<button value=\"", schemeNames.split(",")[i], "\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme cast ", schemeNames.split(",")[i], "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">", TRS[td + 1]);
 				td += 2;
 			}
 			
@@ -795,7 +807,7 @@ public class NpcBufferScheme extends AbstractMods
 		
 		if (schemeNames == null || schemeNames.split(",").length < SCHEMES_PER_PLAYER)
 		{
-			hb.append("<br1><table><tr><td><button value=\"Create\" action=\"bypass -h Engine NpcBufferScheme create_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+			hb.append("<br1><table><tr><td><button value=\"Create\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme create_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 		}
 		else
 		{
@@ -804,7 +816,7 @@ public class NpcBufferScheme extends AbstractMods
 		
 		if (schemeNames != null)
 		{
-			hb.append("<td><button value=\"Edit\" action=\"bypass -h Engine NpcBufferScheme edit_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td><td><button value=\"Delete\" action=\"bypass -h Engine NpcBufferScheme delete_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td></tr></table>");
+			hb.append("<td><button value=\"Edit\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme edit_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td><td><button value=\"Delete\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme delete_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td></tr></table>");
 		}
 		else
 		{
@@ -887,7 +899,7 @@ public class NpcBufferScheme extends AbstractMods
 		hb.append("<br>", text, "<br>");
 		if (buttonEnabled)
 		{
-			hb.append("<button value=\"" + buttonName + "\" action=\"bypass -h Engine NpcBufferScheme redirect_", location, " 0 0\" width=75 height=21  back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+			hb.append("<button value=\"" + buttonName + "\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_", location, " 0 0\" width=75 height=21  back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		}
 		hb.append("<font color=303030>", TITLE_NAME, "</font></center></body></html>");
 		
@@ -920,9 +932,9 @@ public class NpcBufferScheme extends AbstractMods
 		hb.append("<br><br>");
 		hb.append("Scheme name: <edit var=\"name\" width=100>");
 		hb.append("<br><br>");
-		hb.append("<button value=\"Create Scheme\" action=\"bypass -h Engine NpcBufferScheme create $name no_name\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=\"Create Scheme\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme create $name no_name\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		hb.append("<br>");
-		hb.append("<button value=\"Back\" action=\"bypass -h Engine NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=\"Back\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		hb.append("<br>");
 		hb.append("<font color=303030>", TITLE_NAME, "</font>");
 		hb.append("</center>");
@@ -942,11 +954,11 @@ public class NpcBufferScheme extends AbstractMods
 		String schemeNames = getValueDB(player.getObjectId(), "schemeName");
 		for (String scheme : schemeNames.split(","))
 		{
-			hb.append("<button value=\"", scheme, "\" action=\"bypass -h Engine NpcBufferScheme delete_c ", scheme, " x\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+			hb.append("<button value=\"", scheme, "\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme delete_c ", scheme, " x\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		}
 		
 		hb.append("<br>");
-		hb.append("<button value=\"Back\" action=\"bypass -h Engine NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=\"Back\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		hb.append("<br>");
 		hb.append("<font color=303030>" + TITLE_NAME + "</font>");
 		hb.append("</center>");
@@ -968,11 +980,11 @@ public class NpcBufferScheme extends AbstractMods
 		String schemeNames = getValueDB(player.getObjectId(), "schemeName");
 		for (String scheme : schemeNames.split(","))
 		{
-			hb.append("<button value=\"" + scheme + "\" action=\"bypass -h Engine NpcBufferScheme manage_scheme_select " + scheme + "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+			hb.append("<button value=\"" + scheme + "\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme manage_scheme_select " + scheme + "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		}
 		
 		hb.append("<br>");
-		hb.append("<button value=\"Back\" action=\"bypass -h Engine NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=\"Back\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		hb.append("<br>");
 		hb.append("<font color=303030>" + TITLE_NAME + "</font>");
 		hb.append("</center>");
@@ -993,15 +1005,15 @@ public class NpcBufferScheme extends AbstractMods
 		
 		if (bcount < MAX_SCHEME_BUFFS + MAX_SCHEME_DANCES)
 		{
-			hb.append("<button value=\"Add buffs\" action=\"bypass -h Engine NpcBufferScheme manage_scheme_add ", scheme, " 1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+			hb.append("<button value=\"Add buffs\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme manage_scheme_add ", scheme, " 1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		}
 		if (bcount > 0)
 		{
-			hb.append("<button value=\"Remove buffs\" action=\"bypass -h Engine NpcBufferScheme manage_scheme_remove ", scheme, " 1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+			hb.append("<button value=\"Remove buffs\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme manage_scheme_remove ", scheme, " 1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		}
 		hb.append("<br>");
-		hb.append("<button value=\"Back\" action=\"bypass -h Engine NpcBufferScheme edit_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
-		hb.append("<button value=\"Home\" action=\"bypass -h Engine NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=\"Back\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme edit_1\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=\"Home\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		hb.append("<br>");
 		hb.append(Html.newFontColor("303030", TITLE_NAME));
 		hb.append("</center>");
@@ -1071,7 +1083,7 @@ public class NpcBufferScheme extends AbstractMods
 				String name = bh.getSkill().getName().replace("+", " ");
 				hb.append("<tr>");
 				hb.append("<td height=32 fixwidth=32>", getSkillIconHtml(bh.getId(), bh.getLevel()), "</td>");
-				hb.append("<td height=32 fixwidth=232 align=center><a action=\"bypass -h Engine NpcBufferScheme giveBuffs ", bh.getId(), " ", bh.getLevel(), " ", buffType.name(), " ", page, "\">", name, "</a></td>");
+				hb.append("<td height=32 fixwidth=232 align=center><a action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme giveBuffs ", bh.getId(), " ", bh.getLevel(), " ", buffType.name(), " ", page, "\">", name, "</a></td>");
 				hb.append("<td height=32 fixwidth=32>", getSkillIconHtml(bh.getId(), bh.getLevel()), "</td>");
 				hb.append("</tr>");
 				
@@ -1090,7 +1102,7 @@ public class NpcBufferScheme extends AbstractMods
 			{
 				if (i % MAX_PER_PAGE == 0)
 				{
-					hb.append("<td width=20 align=center><a action=\"bypass -h Engine NpcBufferScheme redirect_view_", buffType.name().toLowerCase(), " ", currentPage, "\">", currentPage, "</a></td>");
+					hb.append("<td width=20 align=center><a action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_view_", buffType.name().toLowerCase(), " ", currentPage, "\">", currentPage, "</a></td>");
 					currentPage++;
 				}
 			}
@@ -1101,7 +1113,7 @@ public class NpcBufferScheme extends AbstractMods
 			hb.append("</center>");
 		}
 		hb.append("<br>");
-		hb.append("<button value=\"Back\" action=\"bypass -h Engine NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=\"Back\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		hb.append("<br>");
 		hb.append("<font color=303030>", TITLE_NAME, "</font>");
 		hb.append("</center>");
@@ -1248,11 +1260,11 @@ public class NpcBufferScheme extends AbstractMods
 			}
 			else if (action.equals("add"))
 			{
-				hb.append("<td width=", width, ">", "<a action=\"bypass -h Engine NpcBufferScheme manage_scheme_add ", schemeName, " ", ii, " x\">", ii, "</a></td>");
+				hb.append("<td width=", width, ">", "<a action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme manage_scheme_add ", schemeName, " ", ii, " x\">", ii, "</a></td>");
 			}
 			else if (action.equals("remove"))
 			{
-				hb.append("<td width=", width, ">", "<a action=\"bypass -h Engine NpcBufferScheme manage_scheme_remove ", schemeName, " ", ii, " x\">", ii, "</a></td>");
+				hb.append("<td width=", width, ">", "<a action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme manage_scheme_remove ", schemeName, " ", ii, " x\">", ii, "</a></td>");
 			}
 			else
 			{
@@ -1290,7 +1302,7 @@ public class NpcBufferScheme extends AbstractMods
 					hb.append("<tr>");
 					hb.append("<td width=35>", getSkillIconHtml(id, level), "</td>");
 					hb.append("<td fixwidth=170>", name, "</td>");
-					hb.append("<td><button value=\"Add\" action=\"bypass -h Engine NpcBufferScheme add_buff ", schemeName, "_", id, "_", level, " ", page, " ", TOTAL_BUFF, "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+					hb.append("<td><button value=\"Add\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme add_buff ", schemeName, "_", id, "_", level, " ", page, " ", TOTAL_BUFF, "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 					hb.append("</tr>");
 					hb.append("</table>");
 					k += 1;
@@ -1309,15 +1321,15 @@ public class NpcBufferScheme extends AbstractMods
 				hb.append("<tr>");
 				hb.append("<td width=35>", getSkillIconHtml(id, level), "</td>");
 				hb.append("<td fixwidth=170>", name, "</td>");
-				hb.append("<td><button value=\"Remove\" action=\"bypass -h Engine NpcBufferScheme remove_buff ", schemeName, "_", id, "_", level, " ", page, " ", TOTAL_BUFF, "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
+				hb.append("<td><button value=\"Remove\" action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme remove_buff ", schemeName, "_", id, "_", level, " ", page, " ", TOTAL_BUFF, "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, "></td>");
 				hb.append("</tr>");
 				hb.append("</table>");
 				k += 1;
 			}
 		}
 		hb.append("<br><br>");
-		hb.append("<button value=Back action=\"bypass -h Engine NpcBufferScheme manage_scheme_select ", schemeName, "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
-		hb.append("<button value=Home action=\"bypass -h Engine NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=Back action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme manage_scheme_select ", schemeName, "\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
+		hb.append("<button value=Home action=\"bypass -h Engine " + NPC_ID + " NpcBufferScheme redirect_main\" width=75 height=21 back=", L2UI_CH3.Btn1_normalOn, " fore=", L2UI_CH3.Btn1_normal, ">");
 		hb.append("<br>");
 		hb.append("<font color=303030>", TITLE_NAME, "</font>");
 		hb.append("</center>");
