@@ -32,6 +32,7 @@ import main.util.builders.html.HtmlBuilder.HtmlType;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.skills.stats.enums.StatsType;
 import net.sf.l2j.gameserver.network.clientpackets.Say2.SayType;
@@ -100,7 +101,7 @@ public class SystemVip extends AbstractMods
 	}
 	
 	@Override
-	public void onEvent(L2PcInstance player, L2Character npc, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
 		StringTokenizer st = new StringTokenizer(command, " ");
 		

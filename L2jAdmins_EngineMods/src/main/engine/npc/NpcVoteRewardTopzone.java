@@ -87,7 +87,7 @@ public class NpcVoteRewardTopzone extends AbstractMods
 				hb.append("<table width=280>");
 				hb.append("<tr>");
 				hb.append("<td align=center>", Html.newImage(L2UI.bbs_folder, 32, 32), "</td>");
-				hb.append("<td><button value=\"Vote\" action=\"bypass -h Engine ", NpcVoteRewardTopzone.class.getSimpleName(), " vote\" width=216 height=32 back=", L2UI_CH3.refinegrade3_21, " fore=", L2UI_CH3.refinegrade3_21, "></td>");
+				hb.append("<td><button value=\"Vote\" action=\"bypass -h Engine " + NPC + " ", NpcVoteRewardTopzone.class.getSimpleName(), " vote\" width=216 height=32 back=", L2UI_CH3.refinegrade3_21, " fore=", L2UI_CH3.refinegrade3_21, "></td>");
 				hb.append("<td align=center>", Html.newImage(L2UI.bbs_folder, 32, 32), "</td>");
 				hb.append("</tr>");
 				hb.append("</table>");
@@ -126,9 +126,9 @@ public class NpcVoteRewardTopzone extends AbstractMods
 	}
 	
 	@Override
-	public void onEvent(L2PcInstance player, L2Character npc, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
-		if (((L2Npc) npc).getId() != NPC)
+		if (npc.getId() != NPC)
 		{
 			return;
 		}
@@ -176,7 +176,7 @@ public class NpcVoteRewardTopzone extends AbstractMods
 				
 				hb.append("</center>");
 				hb.append(Html.HTML_END);
-				sendHtml(player, (L2Npc) npc, hb);
+				sendHtml(player, npc, hb);
 			}
 			catch (Exception e)
 			{

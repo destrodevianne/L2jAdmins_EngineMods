@@ -27,6 +27,7 @@ import main.util.builders.html.HtmlBuilder.HtmlType;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.enums.TeamType;
 import net.sf.l2j.gameserver.model.object.L2Object;
@@ -95,7 +96,7 @@ public class SellBuffs extends AbstractMods
 			hb.append("<br>");
 			hb.append("<edit var=\"price\" width=\"200\" height=\"15\">");
 			hb.append("<br>");
-			hb.append("<button value=\"Next\" action=\"bypass -h Engine SellBuffs sell $price\" width=\"80\" height=\"25\" back=\"L2UI_CH3.Btn1_normalOn\" fore=\"L2UI_CH3.btn1_normal\">");
+			hb.append("<button value=\"Next\" action=\"bypass -h Engine 0 SellBuffs sell $price\" width=\"80\" height=\"25\" back=\"L2UI_CH3.Btn1_normalOn\" fore=\"L2UI_CH3.btn1_normal\">");
 			hb.append("</center></body></html>");
 			sendHtml(player, null, hb);
 			return true;
@@ -105,7 +106,7 @@ public class SellBuffs extends AbstractMods
 	}
 	
 	@Override
-	public void onEvent(L2PcInstance player, L2Character character, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
 		StringTokenizer st = new StringTokenizer(command, " ");
 		switch (st.nextToken())
@@ -117,7 +118,7 @@ public class SellBuffs extends AbstractMods
 					break;
 				}
 				
-				character.sendPacket(new PrivateCustomTitle(player, TitleType.SELL, "SellBuffs"));
+				player.sendPacket(new PrivateCustomTitle(player, TitleType.SELL, "SellBuffs"));
 				
 				break;
 			}
@@ -244,7 +245,7 @@ public class SellBuffs extends AbstractMods
 		tb.append("Hello <font color=\"00C3FF\">", player.getName(), "</font>");
 		tb.append("<br><center>My Buff Cost: <font color=\"LEVEL\">", ph.getSellBuffPrice(), "</font> adena each!</center>");
 		tb.append("<br>");
-		tb.append("<center><button value=\"View my Buffs\" action=\"bypass -h Engine SellBuffs view\" width=\"80\" height=\"25\" back=\"L2UI_CH3.Btn1_normalOn\" fore=\"L2UI_CH3.btn1_normal\">");
+		tb.append("<center><button value=\"View my Buffs\" action=\"bypass -h Engine 0 SellBuffs view\" width=\"80\" height=\"25\" back=\"L2UI_CH3.Btn1_normalOn\" fore=\"L2UI_CH3.btn1_normal\">");
 		tb.append("</center>");
 		tb.append("</body></html>");
 		
@@ -302,7 +303,7 @@ public class SellBuffs extends AbstractMods
 			tb.append("<table>");
 			tb.append("<tr>");
 			tb.append("<td width=\"32\"><center><img src=\"", SkillData.getSkillIcon(sk.getId()), "\" width=\"32\" height=\"16\"></center></td>");
-			tb.append("<td width=\"180\"><center><a action=\"bypass -h Engine SellBuffs buy ", sk.getId(), " ", sk.getLevel(), " ", sellerBuff.getName(), " ", page, "\">", sk.getName(), "</center></td>");
+			tb.append("<td width=\"180\"><center><a action=\"bypass -h Engine 0 SellBuffs buy ", sk.getId(), " ", sk.getLevel(), " ", sellerBuff.getName(), " ", page, "\">", sk.getName(), "</center></td>");
 			tb.append("<td width=\"32\"><center><img src=\"", SkillData.getSkillIcon(sk.getId()), "\" width=\"32\" height=\"16\"></center></td>");
 			tb.append("</tr>");
 			tb.append("</table>");
@@ -320,7 +321,7 @@ public class SellBuffs extends AbstractMods
 		{
 			if (i % MAX_SKILL_PER_PAGE == 0)
 			{
-				tb.append("<td width=\"18\"><center><a action=\"bypass -h Engine SellBuffs view " + currentPage + "\">" + currentPage + "</center></a></td>");
+				tb.append("<td width=\"18\"><center><a action=\"bypass -h Engine 0 SellBuffs view " + currentPage + "\">" + currentPage + "</center></a></td>");
 				currentPage++;
 			}
 		}

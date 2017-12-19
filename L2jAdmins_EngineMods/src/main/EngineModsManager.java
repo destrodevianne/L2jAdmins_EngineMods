@@ -63,7 +63,6 @@ import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.object.L2Object;
 import net.sf.l2j.gameserver.model.skills.stats.enums.StatsType;
 import net.sf.l2j.gameserver.model.zone.Zone;
 
@@ -458,30 +457,43 @@ public class EngineModsManager
 	 */
 	public static synchronized void onEvent(L2PcInstance player, String command)
 	{
-		ENGINES_MODS.values().stream().filter(mod -> command.startsWith(mod.getClass().getSimpleName()) && mod.isStarting()).forEach(mod ->
+		String[] params = command.split(" ");
+		
+		try
 		{
-			L2Object obj = player.getTarget();
+			int npcId = Integer.parseInt(params[0]);
+			String modName = params[1];
+			String event = command.replaceFirst(npcId + " ", "").replaceFirst(modName + " ", "");
 			
-			if (!(obj instanceof L2Character))
+			ENGINES_MODS.values().stream().filter(mod -> modName.equalsIgnoreCase(mod.getClass().getSimpleName()) && mod.isStarting()).forEach(mod ->
 			{
-				return;
-			}
-			
-			if (obj != null && !player.isInsideRadius(obj, L2Npc.INTERACTION_DISTANCE, false, false))
-			{
-				return;
-			}
-			
-			try
-			{
-				mod.onEvent(player, (L2Character) obj, command.replace(mod.getClass().getSimpleName() + " ", ""));
-			}
-			catch (Exception e)
-			{
-				LOG.log(Level.SEVERE, e.getMessage());
-				e.printStackTrace();
-			}
-		});
+				L2Npc npc = null;
+				
+				if (npcId != 0)
+				{
+					npc = player.getKnownList().getKnownTypeInRadius(L2Npc.class, L2Npc.INTERACTION_DISTANCE).stream().filter(n -> n.getId() == npcId).findFirst().orElse(null);
+					
+					if (npc == null)
+					{
+						return;
+					}
+				}
+				
+				try
+				{
+					mod.onEvent(player, npc, event);
+				}
+				catch (Exception e)
+				{
+					LOG.log(Level.SEVERE, e.getMessage());
+					e.printStackTrace();
+				}
+			});
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 	public static synchronized String onSeeNpcTitle(int objectId)

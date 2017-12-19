@@ -732,7 +732,7 @@ public abstract class AbstractMods
 		return false;
 	}
 	
-	public void onEvent(L2PcInstance player, L2Character npc, String command)
+	public void onEvent(L2PcInstance player, L2Npc npc, String command)
 	{
 		//
 	}
